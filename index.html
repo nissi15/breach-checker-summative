@@ -137,8 +137,41 @@
 
         </section>
 
-        
+        <section class="page" id="reveal" hidden>
+            <div class="hero hero-center">
+                <h1>Someone shared a secret.</h1>
+                <p class="hero-text">It can only be viewed one time.</p>
+                <p class="hero-small">Make sure to store it safely.</p>
+
+                <div class="secret-card">
+                    <div class="secret-content">
+                        <p class="label">Secret</p>
+                        <p class="secret-text" id="secret-text"></p>
+                        <button id="copySecretButton" class="btn-small">Copy</button>
+                        <p class="note">This secret is now deleted. Save it somewhere safe.</p>
+                    </div>
+
+                    <button id="cover" class="cover">
+                        <img src="" alt="" class="lock-icon">
+                        <span class="cover-title" id="cover-title">Tap to reveal</span>
+                        <span class="cover-txt" id="cover-txt">You can only viwe this once</span>
+                    </button>
+                </div>
+
+                <a href="/#share" class="text-link">Share your own secret &rarr;</a>
+            </div>
+        </section>
     </main>
+
+    <footer class="footer">
+        <p class="footer-brand">
+            <span class="logo-icon logo-icon-small">
+                <img src="" alt="">
+            </span>
+            <strong>breachcheck.</strong>
+            <span class="credit">Breach data: <a href="http://haveibeenpwned.com" target="_blank" rel="noopener">Have I Been Pwned</a></span>
+        </p>
+    </footer>
    </div> 
 </body>
 </html>

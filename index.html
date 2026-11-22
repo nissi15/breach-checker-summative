@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>breach check</title>
+</head>
+<body>
+   <div class="whole">
+
+    <header class="navbar">
+        <a href="/" class="logo">
+            <span class="logo-icon">
+                <img src="" alt="" >
+            </span>
+            breachcheck
+        </a>
+
+        <nav class="switch" id="tabs">
+            <button class="tab active" data-tab="breachers">Breach news</button>
+            <button class="tab" data-tab="share">Share &amp; check</button>
+            
+        </nav>
+    </header>
+
+    <main>
+        <section id="breaches" class="page">
+            <div class="hero">
+                <p class="eyebrow">Breach news</p>
+                <h1>Who got hacked?</h1>
+                <p class="hero-text">Take a look at company websites that have been hacked and see what got leaked.</p>
+
+                <form class="search-row" id="breach-search-form">
+                    <div class="search-box">
+                        <img alt="" class="search-icon" src="">
+                        <input type="search" id="breach-search" placeholder="Search a website" maxlength="60" aria-label="Search a website">
+                    </div>
+                    <button class="btn-search" type="submit">Search</button>
+                </form>
+            </div>
+
+            <div class="filter-row">
+                <select class="small-select" id="small-select" aria-label="sort by year">
+                    <option value="all">Year: All</option>
+                </select>
+
+                <div class="checks" id="breachFilters">
+                    <label class="check"><input type="checkbox" value="Passwords"> Passwords</label>
+                    <label class="check"><input type="checkbox" value="Email addresses"> Emails</label>
+                    <label class="check"><input type="checkbox" value="Phobe numbers"> Phone numbers</label>
+                    <label class="check"><input type="checkbox" value="verified"> Verified only</label>
+                </div>
+
+                <select class="small-select" id="check-sort" aria-label="Sort breaches">
+                    <option value="newest">Newest first</option>
+                    <option value="oldest">Oldest first</option>
+                    <option value="biggest">Biggest first</option>
+                    <option value="name">A to Z</option>
+                </select>
+            </div>
+
+            <h2 class="list-title">Latest hacks</h2>
+            <p id="breach-msg" class="message" hidden></p>
+
+            <div class="table-card">
+                <p id="breachCount" class="table-caption">Loading hacked sites...</p>
+                <div class="table-scroll">
+                    <table id="breach-table">
+                        <thead>
+                            <tr>
+                                <th>Website</th>
+                                <th>Reported</th>
+                                <th>Accounts affected</th>
+                                <th>Dataa exposed</th>
+                                <th><span class="sr-only">Details</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="breach-rows"></tbody>
+                    </table>
+                </div>
+                <div id="page-btn" class="pages"></div>
+            </div>
+
+            <p class="small-note">Breach history doesn't confirm whether your account was affected.</p>
+        </section>
+
+        <!-- ==== tab 2: share password and check its strength -->
+
+        <section id="share" class="page" hidden>
+            <div class="hero hero-center">
+                <h1>Share a password. Once.</h1>
+                <p class="hero-text">Check if your password is weak and send it with a link that disappears when opened.</p>
+                <p class="hero-small">Leak check. One view. Expires immeditely.</p>
+
+                <form id="shareForm" class="share-form">
+                    <label for="secret-txt">Password or secret message</label>
+                    <textarea id="secret-txt" rows="4" maxlength="500" placeholder="write your message here..."></textarea>
+                    <p id="secret-count" class="counter">0 / 500</p>
+                </form>
+            </div>
+        </section>
+    </main>
+   </div> 
+</body>
+</html>

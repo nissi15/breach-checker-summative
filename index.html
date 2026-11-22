@@ -96,9 +96,48 @@
                     <label for="secret-txt">Password or secret message</label>
                     <textarea id="secret-txt" rows="4" maxlength="500" placeholder="write your message here..."></textarea>
                     <p id="secret-count" class="counter">0 / 500</p>
+
+                    <!-- after the checking if the password has been leaked -->
+                    <p class="leak-note" id="leak-note" hidden></p>
+
+                    <div class="select-box">
+                        <label for="ttl-select">Expires in</label>
+                        <select id="ttl-select">
+                            <option value="3600">1 hour</option>
+                            <option value="86400">1 day</option>
+                            <option value="604800">7 days</option>
+                            <option value="custom">Custom (minutes)</option>
+                        </select>
+                    </div>
+
+                    <div id="minutes-box" class="select-box" hidden>
+                        <label for="custom-min">Minutes</label>
+                        <input type="number" id="custom-min" min="1" max="10080" value="30">
+                    </div>
+
+                    <button type="submit" id="share-btn" class="btn-main">
+                        <span id="share-btn-txt">Create one-time link</span>
+                        <span class="btn-arrow" aria-hidden="true">&rarr;</span>
+                    </button>
                 </form>
+
+                <p id="share-msg" class="message" hidden></p>
+
+                <div class="link-box" id="link-box" hidden>
+                    <label for="link-input">Your one-time link</label>
+                    <div class="link-row">
+                        <input type="text" id="link-input" readonly>
+                        <button class="btn-small" id="link-btn">Copy</button>
+                    </div>
+                    <p class="note">Works once. After it's opened, the links is destroyed
+                    <button class="txt-btn" id="delete-btn">Delete link now</button>
+                    </p>
+                </div>
             </div>
+
         </section>
+
+        
     </main>
    </div> 
 </body>

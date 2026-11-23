@@ -45,5 +45,24 @@ def secret_page(secret_key):
 def health():
     return {"status": "ok"}
 
+@app.after_request
+def add_security_headers(response):
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    # never send our secret links to other websites
+    response.headers["Referrer-Policy"] = "no-referrer"
+    # blocks XSS
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "style-src 'self' https://fonts.googleapis.com; "
+        "font-src https://fonts.gstatic.com; "
+        "img-src 'self'"
+    )
+
+    if request.path.startswith("/secret") or request.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Served-By"] = server_name
+    return response
+
 if __name__ == "__main__":
     app.run(debug=True)

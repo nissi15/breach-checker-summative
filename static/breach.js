@@ -91,7 +91,7 @@ function getVisibleBreaches() {
         return breachMatching(breach, searchTxt, year, ticked);
     });
 
-    visibleBreaches.sort(function (FirstBreach, secondBreach) {
+    visibleBreaches.sort(function (firstBreach, secondBreach) {
         if (sortField === 'biggest') {
             return secondBreach.count - firstBreach.count;
         } else if (sortField === 'newest') {

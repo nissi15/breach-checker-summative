@@ -64,5 +64,56 @@ def add_security_headers(response):
     response.headers["X-Served-By"] = server_name
     return response
 
+# shows the list of hacked websites
+def get_breaches():
+    age = time.time() - cache["saved_at"]
+    if cache["breaches"] is not None and age < cache_time:
+        return cache["breaches"], "cache"
+
+    try:
+        response = requests.get(f"{hibp_base}/breaches",
+                                headers=headers, timeout=timeout)
+    except requests.exceptions.RequestException as error:
+        print("GET breaches failed:", error)
+        return None, "error"
+
+    if response.status_code == 200:
+        breaches = []
+        for item in response.json(): #skips everything thats not a hacked site
+            if (item.get("IsSpamList") or item.get("IsFabricated")
+                    or item.get("IsSensitive") or item.get("IsMalware")
+                    or item.get("IsStealerLog")):
+                continue
+
+            breaches.append({
+                "name": item["Title"],
+                "domain": item["Domain"],
+                "date": item["BreachDate"],
+                "added": item["AddedDate"][:10],
+                "count": item["PwnCount"],
+                "data": item["DataClasses"],
+                "verified": item["IsVerified"],
+            })
+        cache["breaches"] = breaches
+        cache["saved_at"] = time.time()
+        return breaches, "api"
+    else:
+        print("GET breaches failed:", response.status_code)
+        return None, "error"
+
+
+@app.route("/api/breaches")
+def breaches(): #send the hacked list to our app
+    data, source = get_breaches()
+
+    if data is not None:
+        return jsonify({"breaches": data, "source": source})
+
+    if cache["breaches"] is not None:
+        return jsonify({"breaches": cache["breaches"], "source": "old-cache"})
+
+    return jsonify({"error": "The breach service is down. "
+                             "please try again in a minute."}), 503
+
 if __name__ == "__main__":
     app.run(debug=True)

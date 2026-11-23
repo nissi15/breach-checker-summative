@@ -115,5 +115,101 @@ def breaches(): #send the hacked list to our app
     return jsonify({"error": "The breach service is down. "
                              "please try again in a minute."}), 503
 
+# == One time links
+
+def ots_ready(): #checks api in the .env
+    return ots_username != "" and ots_api_key != ""
+
+
+@app.route("/api/share", methods=["POST"])
+def share():
+    if not ots_ready():
+        return jsonify({"error": "Sharing is not set up on this server."}), 500
+
+    data = request.get_json(silent=True) or {}
+    secret = str(data.get("secret", "")).strip()
+    ttl = data.get("ttl")
+
+    if secret == "":
+        return jsonify({"error": "Please type something to share."}), 400
+    if len(secret) > max_secret_length:
+        return jsonify({"error": "Keep it under 500 characters."}), 400
+    if type(ttl) is not int or ttl < min_ttl or ttl > max_ttl:
+        return jsonify({"error": "pick an expiry between 1 minute and 7 days."}), 400
+
+    try:
+        response = requests.post(f"{ots_base}/share",
+                                 auth=(ots_username, ots_api_key),
+                                 data={"secret": secret, "ttl": ttl},
+                                 timeout=timeout)
+    except requests.exceptions.RequestException as error:
+        print("POST share failed:", error)
+        return jsonify({"error": "The sharing service is not answering. "
+                                 "please try again."}), 503
+
+    if response.status_code == 200:
+        result = response.json()
+        return jsonify({"secret_key": result["secret_key"],
+                        "metadata_key": result["metadata_key"]})
+    elif response.status_code == 429:
+        return jsonify({"error": "Too many links made. "
+                                 "plz wait and try again."}), 429
+    else:
+        # do not show the real reason: it could mention our account
+        print("POST share failed:", response.status_code)
+        return jsonify({"error": "Cannot create the link now. "
+                                 "please try again later."}), 502
+
+
+@app.route("/api/reveal/<secret_key>", methods=["POST"])
+def reveal(secret_key):
+    if not re.fullmatch(r"[A-Za-z0-9]{8,64}", secret_key):
+        return jsonify({"error": "This link is invalid."}), 400
+    if not ots_ready():
+        return jsonify({"error": "Sharing is not set up on this server."}), 500
+
+    try:
+        response = requests.post(f"{ots_base}/secret/{secret_key}",
+                                 auth=(ots_username, ots_api_key),
+                                 timeout=timeout)
+    except requests.exceptions.RequestException as error:
+        print("POST reveal failed:", error)
+        return jsonify({"error": "The sharing service is not answering. "
+                                 "Your secret is still safe, try again."}), 503
+
+    if response.status_code == 200:
+        return jsonify({"value": response.json()["value"]})
+    elif response.status_code == 404:
+        return jsonify({"error": "This secret was already viewed "
+                                 "or has expired."}), 404
+    else:
+        print("POST reveal failed:", response.status_code)
+        return jsonify({"error": "Could not open the secret. "
+                                 "Please try again."}), 502
+
+
+@app.route("/api/burn/<metadata_key>", methods=["POST"])
+def burn(metadata_key):
+    if not re.fullmatch(r"[A-Za-z0-9]{8,64}", metadata_key):
+        return jsonify({"error": "This link is not valid."}), 400
+    if not ots_ready():
+        return jsonify({"error": "Sharing is not set up on this server."}), 500
+
+    try:
+        response = requests.post(f"{ots_base}/private/{metadata_key}/burn",
+                                 auth=(ots_username, ots_api_key),
+                                 timeout=timeout)
+    except requests.exceptions.RequestException as error:
+        print("POST burn failed:", error)
+        return jsonify({"error": "The sharing service is not answering. "
+                                 "Please try again."}), 503
+
+    if response.status_code == 200:
+        return jsonify({"burned": True})
+    else:
+        print("POST burn failed:", response.status_code)
+        return jsonify({"error": "This link was already opened "
+                                 "or deleted."}), 404
+
 if __name__ == "__main__":
     app.run(debug=True)

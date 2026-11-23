@@ -115,6 +115,39 @@ def breaches(): #send the hacked list to our app
     return jsonify({"error": "The breach service is down. "
                              "please try again in a minute."}), 503
 
+# == Password checks
+
+@app.route("/api/password/<prefix>")
+def password_check(prefix):
+    #we only sends the first 5 characters of the SHA-1 hash, so passwords aren't seen'.
+    
+    if not re.fullmatch(r"[0-9A-Fa-f]{5}", prefix):
+        return jsonify({"error": "Invalid hash prefix."}), 400
+
+    try:
+        response = requests.get(f"{pwned_base}/range/{prefix.upper()}",
+                                headers=headers, timeout=timeout)
+    except requests.exceptions.RequestException as error:
+        print("GET password range failed:", error)
+        return jsonify({"error": "The password service is not answering. "
+                                 "Please try again."}), 503
+
+    if response.status_code == 200:
+        # each line looks like "SUFFIX:COUNT"
+        results = {}
+        for line in response.text.splitlines():
+            suffix, count = line.split(":")
+            results[suffix] = int(count)
+        return jsonify({"results": results})
+    elif response.status_code == 429:
+        return jsonify({"error": "Too many checks. "
+                                 "Wait a few seconds and try again."}), 429
+    else:
+        print("GET password range failed:", response.status_code)
+        return jsonify({"error": "The password service had a problem. "
+                                 "Please try again."}), 502
+
+
 # == One time links
 
 def ots_ready(): #checks api in the .env

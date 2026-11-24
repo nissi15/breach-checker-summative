@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+REPO_URL="https://github.com/nissi15/breach-checker-summative.git"
+APP_DIR="/home/ubuntu/breach-checker-summative"
+
+
+apt-get update -y
+apt-get install -y docker.io docker-compose-v2 nginx git
+
+systemctl enable --now docker
+
+usermod -aG docker ubuntu
+
+if [ ! -d "$APP_DIR" ]; then
+    git clone "$REPO_URL" "$APP_DIR"
+else
+    git -C "$APP_DIR" pull
+fi
+
+if [ ! -f "$APP_DIR/.env" ]; then
+    cp "$APP_DIR/.env.example" "$APP_DIR/.env"
+    sed -i "s/^SERVER_NAME=.*/SERVER_NAME=$(hostname)/" "$APP_DIR/.env"
+    echo "Now add your Onetime Secret key to $APP_DIR/.env"
+fi
+chown -R ubuntu:ubuntu "$APP_DIR"
+
+cd "$APP_DIR" && docker compose up -d --build
+
+
+cat > /etc/nginx/sites-available/default <<'CFG'
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name _;
+
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+CFG
+
+nginx -t && service nginx restart
+

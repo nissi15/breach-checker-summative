@@ -496,7 +496,7 @@ th, td {
 
 /* Reveal page */
 .secret-card {
-    background: wheat;
+    background: white;
     position: relative;
     min-height: 210px;
     border-radius: 12px;

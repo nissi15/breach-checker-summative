@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+
+WEB01_IP="$1"
+WEB02_IP="$2"
+
+CERT="/etc/haproxy/certs/www.pem"
+
+if [ -z "$WEB01_IP" ] || [ -z "$WEB02_IP" ]; then
+    echo "Usage: sudo bash deploy/setup_load_balancer WEB01_IP WEB02_IP"
+    exit 1
+fi
+
+if [ ! -f "$CERT" ]; then
+    echo "SSL certificate $CERT not found on this server."
+    exit 1
+fi
+
+apt-get update -y
+apt-get install -y haproxy
+
+config="/etc/haproxy/haproxy.cfg"
+
+# Keep a backup so we can go back if something breaks
+cp "$config" "$config.backup"
+
+cat > "$config" <<CFG
+global
+    log /dev/log local0
+    chroot /var/lib/haproxy
+    user haproxy
+    group haproxy
+    daemon
+
+defaults
+    log global
+    mode http
+    option httplog
+    timeout connect 5s
+    timeout client 30s
+    timeout server 30s
+
+frontend web_frontend
+    bind *:80
+    bind *:443 ssl crt $CERT
+    http-request redirect scheme https code 301 unless { ssl_fc }
+    http-request set-header X-Forwarded-Proto https
+    default_backend web_backend
+
+backend web_backend
+    balance roundrobin
+    option httpchk GET /health
+    http-check expect status 200
+    server 7301-web-01 $WEB01_IP:80 check inter 5s fall 2 rise 2
+    server 7301-web-02 $WEB02_IP:80 check inter 5s fall 2 rise 2
+CFG
+
+if haproxy -c -f "$config"; then
+    service haproxy restart
+else
+    echo "Config error, restoring the backup"
+    cp "$config.backup" "$config"
+fi
+

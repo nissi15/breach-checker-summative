@@ -1,0 +1,48 @@
+name: Test and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install libraries
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: pytest -v
+
+      - name: Check the Docker image builds
+        run: docker build -t breachcheck .
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    strategy:
+      # update one server at a time
+      max-parallel: 1
+      matrix:
+        server: [WEB01_HOST, WEB02_HOST]
+    steps:
+      - name: Update ${{ matrix.server }}
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets[matrix.server] }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/breach-checker-summative
+            git pull
+            docker compose up -d --build
+            docker image prune -f
+
